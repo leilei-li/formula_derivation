@@ -1,0 +1,175 @@
+\documentclass[11pt]{report}
+\usepackage{ctex}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\title{机器学习经典算法推导}
+\author{黎雷蕾}
+\begin{document}
+\maketitle
+\tableofcontents
+\chapter{BP算法}
+假设样本输入为$x_i$，对应的标签为$y_i$。
+\par
+假设第$h$个隐藏层输入为：$\alpha_h=\sum_i v_{ih}x_i$，输出为：$b_h$。
+\par
+假设第$j$个输出层输入为：$\beta_j=\sum_j w_{hj}b_h$，输出为：$\hat{y}_j=f(\beta_j-\theta_j)$，其中$f(x)$为激活函数，这里取sigmoid，$\theta$为阈值。
+\par
+综上，我们可以建立从输入到输出的的联系:
+\begin{equation}
+\label{NN_process}
+	\begin{cases}
+		& \alpha_h=\sum_i v_{ih}x_i\\
+		& b_h=f_1(\alpha_h-\gamma_h)\\
+		& \beta_j=\sum_j w_{hj}b_h\\
+		& \hat{y}_j=f(\beta_j-\theta_j)
+	\end{cases}
+\end{equation}
+对于某个样本$k$，计算均方误差，为了方便，增加一个系数$\frac{1}{2}$：
+\begin{equation}
+	E_k=\frac{1}{2}\sum_j(\hat{y}_j^k-y_j^k)^2
+\end{equation}
+\par
+我们进行随机梯度下降，满足:
+\begin{equation}
+\label{SGD}
+	g(x+\Delta x)<g(x)
+\end{equation}
+根据泰勒展开式展开到一阶：
+\begin{equation}
+\begin{split}
+	f(x+\Delta x)&\approx f(x)+\Delta xf'(x)+\frac{1}{2!}\Delta xf^{(2)}(x)+\cdots+\frac{1}{n!}\Delta xf^{(n)}(x)\\
+	&\approx f(x)+\Delta xf'(x)
+\end{split}
+\end{equation}
+那么公式\ref{SGD}可以转化为：
+\begin{equation}
+\begin{split}
+	g(x+\Delta x)<g(x)&\Rightarrow g(x)+\Delta xg'(x)<g(x)\\
+	&\Rightarrow \Delta xg'(x)<0
+\end{split}
+\end{equation}
+我们只需让$\Delta xg'(x)$趋近于一个接近零的极小负数即可，引入学习速率$\eta$，由梯度下降的公式及偏导数的定义：
+\begin{equation}
+	v\leftarrow v+\Delta v
+\end{equation}
+\begin{equation}
+\label{optimal_target}
+	\Delta x =-\eta\frac{\partial L}{\partial x}
+\end{equation}
+其中，$L$就是我们定义的损失函数，$x$就是需要优化的参数了。
+\section{$\Delta w$更新公式推导}
+对于某个样本$k$，由公式\ref{optimal_target}我们可以推出$\Delta w$的优化公式:
+\begin{equation}
+	\Delta w_{hj}=-\eta\frac{\partial E_k}{\partial w_{hj}}
+\end{equation}
+由公式\ref{NN_process}我们可以知道:$w$先影响$\beta$再影响$\hat{y}$最后影响$E$，这就构成了一个误差逆向传播链，那么由链式法则可以知道：
+\begin{equation}
+\label{w_123}
+	\frac{\partial E_k}{\partial w_{hj}}=\frac{\partial E_k}{\partial \hat{y}_j^k}\cdot\frac{\partial \hat{y}_j^k}{\partial \beta_j}\cdot\frac{\partial \beta_j}{\partial w_{hj}}
+\end{equation}
+因为$\beta_j=\sum_j w_{hj}b_h$，那么：
+\begin{equation}
+\label{w_3}
+\begin{split}
+	\frac{\partial \beta_j}{\partial w_{hj}}&=\frac{\partial\left(\sum_j w_{hj}b_h \right)}{\partial w_{hj}}\\
+		&=\frac{\partial\left(w_{h1}b_h+w_{h2}b_h+\cdots+w_{hj}b_h \right)}{\partial w_{hj}}\\
+		&=b_h
+\end{split}	
+\end{equation}
+\par
+接下来推导$\frac{\partial E_k}{\partial \hat{y}_j^k}$:
+\begin{equation}
+\label{w_1}
+	\begin{split}
+		\frac{\partial E_k}{\partial \hat{y}_j^k}&=\frac{\left(\frac{1}{2}\sum_j(\hat{y}_j^k-y_j^k)^2 \right)}{\partial \hat{y}_j^k}\\
+		&=\frac{\partial\left(\frac{1}{2}\left((\hat{y}_1^k-y_1^k)^2+(\hat{y}_2^k-y_2^k)^2+\cdots+(\hat{y}_j^k-y_j^k)^2\right) \right)}{\partial \hat{y}_j^k}\\
+		&=\frac{\partial\left(\frac{1}{2} (\hat{y}_j^k-y_j^k)^2\right)}{\partial \hat{y}_j^k}\\
+		&=\hat{y}_j^k-y_j^k
+	\end{split}
+\end{equation}
+\par
+往下继续推导$\frac{\partial \hat{y}_j^k}{\partial \beta_j}$，这里需要借用一个sigmoid函数的特殊性质:
+\begin{equation}
+\label{sigmoid_xingzhi}
+	f'(x)=f(x)(1-f(x))
+\end{equation}
+借用sigmoid函数的性质，我们进行如下推导：
+\begin{equation}
+\label{w_2}
+	\begin{split}
+		\frac{\partial \hat{y}_j^k}{\partial \beta_j}&=\frac{\partial f(\beta_j^k-\theta_j)}{\partial \beta_j}\\
+		&=f'(\beta_j^k-\theta_j)\\
+		&=f(\beta_j^k-\theta_j)(1-f(\beta_j^k-\theta_j))\\
+		&=\hat{y}_j^k(1-\hat{y}_j^k)
+	\end{split}
+\end{equation}
+\par
+我们简化偏导数的表达公式:
+\begin{equation}
+	\label{g_j}
+	\begin{split}
+		g_j&=\frac{\partial E_k}{\partial \hat{y}_j^k}\cdot\frac{\partial \hat{y}_j^k}{\partial \beta_j}\\
+		&=(\hat{y}_j^k-y_j^k)\hat{y}_j^k(1-\hat{y}_j^k)
+	\end{split}
+\end{equation}
+至此，综合公式\ref{w_123}、\ref{w_1}、\ref{w_2}、\ref{w_3}、\ref{g_j}我们可以求出$\Delta w_{hj}$的更新公式了。
+\begin{equation}
+\label{w_update}
+	\begin{split}
+		\Delta w_{hj}&=-\eta g_j b_h\\
+		&=-\eta(\hat{y}_j^k-y_j^k)\hat{y}_j^k(1-\hat{y}_j^k)b_h
+	\end{split}
+\end{equation}
+\par
+这说明$w$的更新完全可以由输出$\hat{y}$，label $y$和上一层的输出$b_h$进行更新了。
+\section{$\Delta \theta$更新公式推导}
+同理，我们可以由公式\ref{optimal_target}来确定$\theta_j$	的更新公式:
+\begin{equation}
+	\begin{split}
+		\Delta \theta_j &=-\eta\frac{\partial E_k}{\partial \theta_j}\\
+		&=-\eta\frac{\partial\left(\frac{1}{2}\sum_j(\hat{y}_j^k-y_j^k)^2 \right)}{\partial \theta_j}\\
+		&=-\eta\frac{\partial\left(\frac{1}{2}\sum_j(f(\beta_j^k-\theta_j)-y_j^k)^2 \right)}{\partial \theta_j}\\
+		&=-\eta\left((f(\beta_j^k-\theta_j)-y_j^k)\cdot f'(\beta_j^k-\theta_j) \right)\\
+		&=-\eta\left((\hat{y}_j^k-y_j^k)\cdot f(\beta_j^k-\theta_j)\cdot (1-f(\beta_j^k-\theta_j) )\right)\\
+		&=-\eta\left((\hat{y}_j^k-y_j^k)\cdot \hat{y}_j^k \cdot (1-\hat{y}_j^k) \right)\\
+		&=-\eta g_j
+	\end{split}
+\end{equation}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+\end{document}
