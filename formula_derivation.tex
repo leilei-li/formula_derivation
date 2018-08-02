@@ -22,7 +22,7 @@
 		& \alpha_h=\sum_i v_{ih}x_i\\
 		& b_h=f_1(\alpha_h-\gamma_h)\\
 		& \beta_j=\sum_j w_{hj}b_h\\
-		& \hat{y}_j=f(\beta_j-\theta_j)
+		& \hat{y}_j=f_2(\beta_j-\theta_j)
 	\end{cases}
 \end{equation}
 对于某个样本$k$，计算均方误差，为了方便，增加一个系数$\frac{1}{2}$：
@@ -61,6 +61,7 @@
 \section{$\Delta w$更新公式推导}
 对于某个样本$k$，由公式\ref{optimal_target}我们可以推出$\Delta w$的优化公式:
 \begin{equation}
+\label{delta_w}
 	\Delta w_{hj}=-\eta\frac{\partial E_k}{\partial w_{hj}}
 \end{equation}
 由公式\ref{NN_process}我们可以知道:$w$先影响$\beta$再影响$\hat{y}$最后影响$E$，这就构成了一个误差逆向传播链，那么由链式法则可以知道：
@@ -137,7 +138,34 @@
 	\end{split}
 \end{equation}
 \section{$\Delta v$更新公式推导}
+同公式\ref{delta_w}一致，结合链式法则，我们可以写出$\Delta v$的更新公式:
+\begin{equation}
+	\label{delta_v}
+	\begin{split}
+		\Delta v_{ih}&=-\eta\cdot\frac{\partial E_k}{\partial v_{ih}}\\
+		&=-\eta\cdot\frac{\partial E_k}{\partial b_k}\cdot\frac{\partial b_k}{\partial \alpha_h}\cdot\frac{\partial\alpha_h}{\partial v_{ih}}\\
+		&=-\eta\cdot\frac{\partial E_k}{\partial v_{ih}}\cdot\frac{\partial f(\alpha_h-\gamma_h)}{\partial \alpha_h}\cdot \frac{\partial \sum_i v_{ih}x_i}{\partial v_{ih}}\\
+		&=-\eta\cdot\frac{\partial E_k}{\partial v_{ih}}\cdot f'(\alpha_h-\gamma_h) \cdot x_i\\
+		&\approx -\eta\cdot \frac{\partial E_k}{\partial \hat{y}_j^k}\frac{\partial \hat{y}_j^k}{\partial\beta_j}\frac{\partial\beta_j}{\partial b_h}\cdot f(\alpha_h-\gamma_h)(1-f(\alpha_h-\gamma_h))\cdot x_i\\
+		&=-\eta\cdot g_j\frac{\partial\sum_j w_{hj}b_h}{\partial b_h}\cdot b_h(1-b_h)\cdot x_i\\
+		&=-\eta\cdot g_j\sum_j w_{hj}\cdot b_h(1-b_h)\cdot x_i
+		=-\eta e_h x_i
+	\end{split}
+\end{equation}
+其中$e_h=b_h(1-b_h)\sum_j w_{hj}g_j$.
+\section{$\Delta \gamma_h$更新公式推导}
+同理，我们可以结合链式法则，由公式\ref{delta_w}来确定$\gamma_h$的更新公式:
+\begin{equation}
+	\label{gamma_h}
+	\begin{split}
+		\Delta \gamma_h &=-\eta\cdot \frac{\partial E_k}{\partial \gamma_h}\\
+		&=-\eta\cdot \frac{\partial E_k}{\partial b_h}\frac{\partial b_h}{\partial \alpha_h}\cdot \frac{\partial \alpha_h}{\partial b_h} \frac{\partial b_h}{\partial\gamma_h}\\
+		&=-\eta\cdot e_h\cdot \frac{1}{\frac{\partial b_h}{\partial \alpha_h}}\cdot -1 \\
+		&=\eta e_h 
+	\end{split}
+\end{equation}
 
+\chapter{下一个算法}
 
 
 
