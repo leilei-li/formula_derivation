@@ -8,6 +8,396 @@
 \begin{document}
 \maketitle
 \tableofcontents
+\chapter{代数基础}
+\section{损失函数}
+\subsection{0-1损失(Zero-one Loss)}
+最简单的损失函数，如果预测值$\hat{y}_i$与目标值$y_i$不相等，那么为1，否则为0.
+\begin{equation}
+	\ell(y_i,\hat{y}_i)=
+	\begin{cases}
+		&1,\quad y_i\neq\hat{y}_i;\\
+		&0,\quad y_i=\hat{y}_i.
+	\end{cases}
+\end{equation}
+\subsection{感知损失(Perceptron Loss)}
+用来改进0-1损失中判定较为严格的问题：
+\begin{equation}
+	\ell(y_i,\hat{y}_i)=
+	\begin{cases}
+		&1,\quad |y_i-\hat{y}_i|>t\\
+		&0,\quad |y_i-\hat{y}_i|\leq t.
+	\end{cases}
+\end{equation}
+\subsection{Hinge Loss}
+Hinge Loss可以用来解决SVM只能够的间隔最大化问题。
+\begin{equation}
+\begin{split}
+	\ell(y_i,\hat{y}_i)&=\max\{0,1-y_i\cdot\hat{y}_i\},\\
+	&y_i\in\{-1,+1\}, \quad \hat{y}_i\in[-1,+1].
+\end{split}
+\end{equation}
+\subsection{绝对值误差}
+常用回归中:
+\begin{equation}
+	\ell(y_i,\hat{y}_i)=|y_i-\hat{y}_i|
+\end{equation}
+\subsection{均方误差}
+常用于回归中：
+\begin{equation}
+	\ell(y_i,\hat{y}_i)=\frac{1}{n}\sum_{i=0}^n(y_i-\hat{y}_i)^2,
+\end{equation}
+\subsection{交叉熵}
+神经网络、逻辑回归中常用的损失函数，二分类问题可写作：
+\begin{equation}
+	\begin{split}
+		\ell(y_i,\hat{y}_i)&=y_i\log\hat{y}_i+(1-y_i)\log(1-\hat{y}_i)\\
+		&y_i\in\{0,1\}
+	\end{split}
+\end{equation}
+多分类问题可写作：
+\begin{equation}
+	\ell(y_i,\hat{y}_i)=-\sum_{i=0}^ny_i\log(\hat{y}_i)
+\end{equation}
+\subsection{指数误差(Exponential)}
+常用于boosting算法:
+\begin{equation}
+	\ell(y_i,\hat{y}_i)=\exp(-y_i\cdot\hat{y}_i)
+\end{equation}
+
+\section{数值优化算法}
+\subsection{牛顿法(Newton's method)}
+牛顿法是是一种在实数域和复数域上近似求解方程的方法。方法使用函数$f(x)$的泰勒级数的前面几项来寻找方程$f(x)=0$的根。也被称为切线法。
+\par
+将$f(x)=0$在$x_0$处展开成泰勒级数：
+\begin{equation}
+	f(x_0)\rightarrow\sum_{n=0}^\infty\frac{f^{(n)}(x_0)}{n!}(x-x_0)^n
+\end{equation}
+我们只取其线性部分，作为非线性方程的近似方程：
+\begin{equation}
+	f(x_0)+(x-x_0)f'(x_0)=0
+\end{equation}
+设$f'(x_0)\neq0$，则其解为：
+\begin{equation}
+	x=x_1=x_0-\frac{f(x_0)}{f'(x_0)}
+\end{equation}
+这个公式说明$f(x_1)$的值将会比$f(x_0)$更加接近$f(x)=0$，我们就可以用迭代法逼近：
+\begin{equation}
+	x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}
+\end{equation}
+最好是用二阶导数:
+\begin{equation}
+	x_{n+1}=x_n-\frac{f'(x_n)}{f''(x_n)}
+\end{equation}
+通过迭代，上式必然会在$f(x)=0$处收敛。
+\subsection{拟牛顿法(Quasi-Newton Methods)}
+拟牛顿法(Quasi-Newton Methods)是求解非线性优化问题最有效的方法之一。
+\subsubsection{海森矩阵(Hessian Matrix)}
+海森矩阵是一个多元函数的二阶偏导数构成的方阵，描述了函数的局部曲率。
+假设二元函数$f(x_1,x_2)$在$\textbf{X}^{(0)}(x_1^{(0)},x_2^{(0)})$点处的泰勒展开式为：
+\begin{equation}
+	\begin{split}
+		&f(x_1,x_2)=\\
+		&f(x_1^{(0)},x_2^{(0)})+\left.\frac{\partial f}{\partial x_1}\right|_{\textbf{X}^{(0)}}\Delta x_1+\left.\frac{\partial f}{\partial x_2}\right|_{\textbf{X}^{(0)}}\Delta x_2+\\
+		&\frac{1}{2}\left[\left.\frac{\partial^2 f}{\partial x_1^2}\right|_{\textbf{X}^{(0)}}\Delta x_1^2+\left.2\frac{\partial^2 f}{\partial x_1\partial x_2}\right|_{\textbf{X}^{(0)}}\Delta x_1\Delta x_2+\left.\frac{\partial^2 f}{\partial x_2^2}\right|_{\textbf{X}^{(0)}}\Delta x_2^2\right]+\cdots
+	\end{split}
+\end{equation}
+其中，$\Delta x_1=x_1-x_1^{(0)},\Delta x_2=x_2-x_2^{(0)}$.
+\par
+将上式写成矩阵形式：
+\begin{equation}
+	\begin{split}
+		&f(\textbf{X})=\\
+		&f(\textbf{X}^{(0)})+\left(\frac{\partial f}{\partial x_1},\frac{\partial f}{\partial x_2} \right)_{\textbf{X}^{(0)}}\left(\begin{matrix}
+			\Delta x_1\\
+			\Delta x_2
+		\end{matrix} \right)+\\
+		&\frac{1}{2}(\Delta x_1,\Delta x_2 )\left.\left(\begin{matrix}
+			\frac{\partial^2 f}{\partial x_1^2} & \frac{\partial^2 f}{\partial x_1\partial x_2}\\
+			\frac{\partial^2 f}{\partial x_2\partial x_1} & \frac{\partial^2 f}{\partial x_2^2}
+		\end{matrix}  \right)\right|_{\textbf{X}^{(0)}}\left(\begin{matrix}
+			\Delta x_1\\
+			\Delta x_2
+		\end{matrix} \right)+\cdots
+	\end{split}
+\end{equation}
+即:
+\begin{equation}
+	f(\textbf{X})=f(\textbf{X}^{(0)})+\nabla f(\textbf{X}^{(0)})^T\Delta \textbf{X}+\frac{1}{2}\Delta\textbf{X}^TH(\textbf{X}^{(0)})\Delta\textbf{X}+\cdots
+\end{equation}
+其中:
+\begin{equation}
+	H(\textbf{X}^{(0)})=
+	\left.\left(
+	\begin{matrix}
+		\frac{\partial^2 f}{\partial x_1^2} & \frac{\partial^2 f}{\partial x_1\partial x_2}\\
+		\frac{\partial^2 f}{\partial x_2\partial x_1} & \frac{\partial^2 f}{\partial x_2^2}
+	\end{matrix}
+	\right)\right|_{\textbf{X}^{(0)}},\ \Delta\textbf{X}=
+	\left(\begin{matrix}
+			\Delta x_1\\
+			\Delta x_2
+	\end{matrix} \right)
+\end{equation}
+$H(\textbf{X}^{(0)})$是$f(x_1,x_2)$在$\textbf{X}^{(0)}$处的海森矩阵，由$f(x_1,x_2)$在$\textbf{X}^{(0)}$处的二阶偏导数组成。
+\par
+将海森矩阵扩展到$n$元函数，对应的梯度$\nabla f(\textbf{X}^{(0)})$和海森矩阵可以写作$H(\textbf{X}^{(0)})$:
+\begin{equation}
+	\nabla f(\textbf{X}^{(0)})=\left.\left[\frac{\partial f}{\partial x_1},\frac{\partial f}{\partial x_2},\cdots,\frac{\partial f}{\partial x_n}\right]\right|^T_{\textbf{X}^{(0)}}
+\end{equation}
+\begin{equation}
+	H(\textbf{X}^{(0)})=
+	\left[
+	\begin{matrix}
+		\frac{\partial^2 f}{\partial x_1^2} & \frac{\partial^2 f}{\partial x_1\partial x_2} & \cdots & \frac{\partial^2 f}{\partial x_1\partial x_n}\\
+		\frac{\partial^2 f}{\partial x_2 \partial x_1} & \frac{\partial^2 f}{\partial x_2^2} & \cdots & \frac{\partial^2 f}{\partial x_2\partial x_n}\\
+		\vdots & \vdots & \ddots &\vdots\\
+		\frac{\partial^2 f}{\partial x_n \partial x_1} & \frac{\partial^2 f}{\partial x_n \partial x_2} & \cdots & \frac{\partial^2 f}{\partial x_n^2}
+	\end{matrix}
+	\right]_{\textbf{X}^{(0)}}
+\end{equation}
+\subsubsection{拟牛顿法思想}
+在牛顿法的迭代中，需要计算海森矩阵的逆矩阵$H^{-1}$，这个计算十分复杂，所以考虑到用一个$n$阶矩阵$G_k=G(x^{(k)})$来近似代替$H^{-1}_k=H^{-1}(x^{(k)})$，这就是拟牛顿法的基本思想了。
+\par
+假设$g_k=g(x^{(k)})=\nabla f(x^{k})$是$f(x)$的梯度向量在点$x^{(k)}$的值。那么牛顿法的更新公式就可以写作：
+\begin{equation}
+	x^{(k+1)}=x^{(k)}-H_k^{-1}g_k
+\end{equation}
+拟牛顿法的公式可以写作：
+\begin{equation}
+	x^{(k+1)}=x^{(k)}-G_kg_k
+\end{equation}
+\subsubsection{Davidon Fletcher Powell, DFP算法}
+DFP选择$G_{k+1}$的方法是假设每一步迭代中矩阵$G_{k+1}$是由$G_k$加上两个附加项构成的：
+\begin{equation}
+	G_{k+1}=G_k+P_k+Q_k
+\end{equation}
+设$y_k=g_{k+1}-g_k$，$\delta_k=x^{(k+1)}-x^{(k)}$，那么可以求出$P_k,Q_k$:
+\begin{equation}
+	\begin{split}
+		&P_k=\frac{\delta_k\delta_k^T}{\delta_k^T y_k},\\
+		&Q_k=-\frac{G_ky_ky_k^TG_k^T}{y_k^TG_ky_k}
+	\end{split}
+\end{equation}
+那么DFP算法中$G_{k+1}$的迭代公式可以写作:
+\begin{equation}
+	G_{k+1}=G_{k}+\frac{\delta_k\delta_k^T}{\delta_k^T y_k}-\frac{G_ky_ky_k^TG_k^T}{y_k^TG_ky_k}
+\end{equation}
+那么优化迭代公式可以写作：
+\begin{equation}
+	\begin{split}
+		x^{(k+2)}&=x^{(k+1)}-G_{k+1}g_{k+1}\\
+		&=x^{(k+1)}-\left(G_{k}+\frac{\delta_k\delta_k^T}{\delta_k^T y_k}-\frac{G_ky_ky_k^TG_k^T}{y_k^TG_ky_k}\right)g_{k+1}
+	\end{split}
+\end{equation}
+\subsubsection{Broyden Fletcher Goldfarb Shanno, BFGS算法}
+与DFP算法不同的是，BFGS采用一个容易求解逆矩阵的$B_k$去逼近海森矩阵本身$H$，而不是海森矩阵逆矩阵$H^{-1}$。
+\par
+那么BFGS的迭代公式可以写为：
+\begin{equation}
+	\begin{split}
+		x^{(k+2)}&=x^{(k+1)}-B_{k+1}^{-1}g_{k+1}\\
+		&=x^{(k+1)}-\left(B_{k}+\frac{y_ky_k^T}{y_k^T \delta_k}-\frac{B_k\delta_k\delta_k^TB_k^T}{\delta_k^TB_k\delta_k}\right)^{-1}g_{k+1}
+	\end{split}
+\end{equation}
+\subsection{梯度下降(Gradient descent)}
+\subsubsection{梯度}
+所谓梯度，就是指函数变化最快的地方。对于一个函数$f(x,y)$，分别对于$x,y$求偏导，获得的梯度向量为$(\frac{\partial f}{\partial x},\frac{\partial f}{\partial y})^T$，简称为$grad\ f(x,y)$ 或者$\nabla f(x,y)$。梯度方向指的是沿着梯度向量$\nabla f(x,y)$的方向。
+\subsubsection{梯度下降和梯度上升}
+两者的实质是一样的，梯度下降取相反数就是梯度上升了。
+\subsubsection{梯度下降的代数方法表示}
+假设一个线性回归函数的表示公式为:
+\begin{equation}
+	h_\theta(x)=\sum_{i=0}^n\theta_i x_i
+\end{equation}
+损失函数取均方误差：
+\begin{equation}
+	J(\theta)=\frac{1}{n}\sum_{i=0}^n(h_\theta(x)-y_i)^2
+\end{equation}
+求出$J(\theta)$的梯度：
+\begin{equation}
+	\frac{\partial J(\theta)}{\partial \theta_i}=\frac{2}{n}\left(\sum_{i=0}^n\frac{\partial h_\theta(x)}{\partial \theta_i}-y_i\right)x_i^{(j)}
+\end{equation}
+那么更新的梯度表达式可以写作：
+\begin{equation}
+	\theta'_i=\theta_i-\alpha\frac{\partial J(\theta)}{\partial \theta_i}
+\end{equation}
+其中$\alpha\in[0,1]$称为学习步长，取值过大会造成震荡，太小会造成收敛过慢。
+\subsubsection{梯度下降的矩阵方法表示}
+假设一个线性回归函数的矩阵表示公式为：
+\begin{equation}
+	h_\theta(\textbf{x})=\textbf{X}\theta
+\end{equation}
+那么损失函数可以表示为:
+\begin{equation}
+	J(\theta)=\frac{1}{2}(\textbf{X}\theta-\textbf{Y})^T(\textbf{X}\theta-\textbf{Y})
+\end{equation}
+求出$J(\theta)$的梯度：
+\begin{equation}
+\begin{split}
+	&\frac{\partial}{\partial\textbf{X}}(\textbf{X}\textbf{X}^T)=2\textbf{X}\\
+	&\frac{\partial}{\partial\theta}(\textbf{X}\theta)=\textbf{X}^T\\
+	&\frac{\partial}{\partial\theta}J(\theta)=\textbf{X}^T(\textbf{X}\theta-\textbf{Y})
+\end{split}
+\end{equation}
+那么更新的梯度表达式可以写作：
+\begin{equation}
+	\theta'_i=\theta_i-\alpha\frac{\partial}{\partial \theta_i}J(\theta)
+\end{equation}
+\subsubsection{梯度下降参数调优}
+\begin{enumerate}
+	\item 步长$\alpha$：太大会造成震荡从而错过最优解，太小会造成迭代速度太慢。
+	\item 参数初始值选择，梯度下降求出的是局部最优解，所以参数初始值不同求出的解也会不同，最好是正态分布随机生成。
+	\item 归一化，可以加快迭代速度。
+\end{enumerate}
+\subsubsection{与其它优化算法比较}
+梯度下降法和最小二乘法相比，梯度下降法需要选择步长，而最小二乘法不需要。梯度下降法是迭代求解，最小二乘法是计算解析解。如果样本量不算很大，且存在解析解，最小二乘法比起梯度下降法要有优势，计算速度很快。但是如果样本量很大，用最小二乘法由于需要求一个超级大的逆矩阵，这时就很难或者很慢才能求解解析解了，使用迭代的梯度下降法比较有优势。
+\par
+梯度下降法和牛顿法/拟牛顿法相比，两者都是迭代求解，不过梯度下降法是梯度求解，而牛顿法/拟牛顿法是用二阶的海森矩阵的逆矩阵或伪逆矩阵求解。相对而言，使用牛顿法/拟牛顿法收敛更快。但是每次迭代的时间比梯度下降法长。
+\subsection{Momentum}
+Momentum借鉴了物理学中动量的思想，通过积累之前的动量$m_{t-1}$来加速当前的梯度。设$\mu$是动量因子，通常设为0.9或其近似值：
+\begin{equation}
+	\begin{split}
+		&m_t=\mu\cdot m_{t-1}+\alpha\nabla J(\theta)\\
+		&\theta'_t=\theta_t-m_t
+	\end{split}
+\end{equation}
+特点：
+\begin{itemize}
+	\item 接近局部最优解时，$\mu$的存在可以使更新幅度变大，从而跳出局部最优；
+	\item 当前后两次梯度方向一致时，可以加速收敛，当前后两次梯度方向不一致时，可以减少震荡。
+\end{itemize}
+\subsection{Nesterov}
+Nesterov是基于Momentum的算法，可以在梯度更新时对当前梯度进行一个矫正，避免前进太快，同时提高灵敏度：
+\begin{equation}
+	\begin{split}
+		&m_t=\mu\cdot m_{t-1}+\alpha\nabla J(\theta-\mu\cdot m_{t-1})\\
+		&\theta'_t=\theta_t-m_t
+	\end{split}
+\end{equation}
+\subsection{Adagrad}
+Adagrad对学习速率进行了一个约束。
+设梯度$g_t=\nabla_\theta J(\theta)$，那么:
+\begin{equation}
+	\begin{split}
+		& n_t=n_{t-1}+(g_t)^2\\
+		& \theta_t=\theta_{t-1}-\frac{\eta}{\sqrt{n_t+\epsilon}}\cdot g_t=\theta_{t-1}-\frac{\eta}{\sqrt{\sum_{i=1}^tg_r^2+\epsilon}}\cdot g_t
+	\end{split}
+\end{equation}
+其中$\eta$是一个全局学习率，$\epsilon$是一个常数来保证分母不为0。
+\begin{itemize}
+	\item 优点:
+		\begin{itemize}
+			\item 前期$n_t$较小的时候，梯度的系数较大，能够放大梯度；
+			\item 后期$n_t$较大的时候，梯度的系数较小，能够缩小梯度；
+		\end{itemize}
+	\item 缺点：
+		\begin{itemize}
+			\item 中后期梯度系数会逐渐趋于0，可以使得训练提前结束，这可能会导致无法取得最优值。
+		\end{itemize}
+\end{itemize}
+\subsection{Adadelta}
+针对Adagrad会提前结束的问题，Adadelta只累计固定大小的项，并且也不直接存储这些项，仅仅计算对应的近似平均值。
+\begin{equation}
+\begin{split}
+	& g_t=\nabla_\theta J(\theta)\\
+	& n_t=v\cdot n_{t-1}+(1-v)\cdot g_t^2\\
+	& \theta_t=\theta_{t-1}-\frac{\eta}{\sqrt{n_t+\epsilon}}\cdot g_t\\
+	& E[g^2]_t=\rho\cdot E[g^2]_{t-1}+(1-\rho)\cdot g_t^2
+\end{split}
+\end{equation}
+综上，系数项可以写为:
+\begin{equation}
+	-\frac{\sum_{i=1}^{t-1}\Delta\theta_i}{\sqrt{E[g^2]_t+\epsilon}}
+\end{equation}
+其中$E$代表期望，$v,\rho$是常数。
+\par
+特点:
+\begin{itemize}
+	\item 训练初期，加速效果很好；
+	\item 训练后期，反复在局部最优解附近震荡，但是不会停止。
+\end{itemize}
+\subsection{RMSprop}
+RMSprop是Adadelta的一个特例，即$\rho=0.5$。
+\subsection{Adam}
+Adam是一个非常好用的优化器，基本可以当成很多算法的初始优化器了。Adam本质是带有动量项的Adadelta。
+\begin{equation}
+	\begin{split}
+		& m_t=\mu\cdot m_{t-1}+(1-\mu_t)\cdot g_t\\
+		& n_t=v\cdot n_{t_1}+(1-v)\cdot g_t^2\\
+		& \hat{m}_t=\frac{m_t}{1-\mu^t}\\
+		& \hat{n}_t=\frac{n_t}{1-v^t}\\
+		& \Delta\theta=-\frac{\hat{m}_t}{\sqrt{\hat{n}_t}+\epsilon}\cdot\eta
+	\end{split}
+\end{equation}
+其中的参数初始设置：$\mu=0.9,v=0.999.\epsilon=10^{-8}$。该算法特点:
+\begin{itemize}
+	\item Adma参数比较平稳。
+	\item 善于处理非平稳目标。
+	\item 学习速率是自动计算出来的，不需要自己设置。
+	\item 适用于大多数非凸优化问题。
+\end{itemize}
+\subsection{Adamax}
+Adamax是Adam的一种变化，使得Adma的学习率边界范围更简单。
+\begin{equation}
+	\begin{split}
+		& n_t=\max(v\cdot n_{t-1},|g_t|)\\
+		& \Delta\theta_t=-\frac{\hat{m}_t}{n_t+\epsilon}\cdot \eta
+	\end{split}
+\end{equation}
+\subsection{Nadam}
+Nadam类似于带有Nexterov动量项的Adam算法.
+\begin{equation}
+	\begin{split}
+		& \hat{g}_t=\frac{g_t}{1-\prod_{i=1}^t\mu_i}\\
+		& m_t=\mu\cdot m_{t-1}+(1-\mu_t)\cdot g_t\\
+		& \hat{m}_t=\frac{m_t}{1-\prod_{i=1}^{t+1}\mu_i}\\
+		& n_t=v\cdot n_{t-1}+(1-v)\cdot g_t^2\\
+		& \hat{n}_t=\frac{n_t}{1-v^t}\hat{m}_t=(1-\mu_t)\cdot\hat{g}_t+\mu_{t+1}\cdot\hat{m}_t\\
+		& \Delta\theta_t=-\frac{\hat{m}_t}{\sqrt{\hat{n}_t}+\epsilon}\cdot\eta
+	\end{split}
+\end{equation}
+一般而言，在使用带动量的RMSprop或Adam问题，使用Nadam可以取得更好的效果。
+\section{拉格朗日乘子法}
+拉格朗日乘子法就是求函数$f(x_1,x_2,\cdots)$在约束条件$g(x_1,x_2,\cdots)=0$下的极值的方法。
+步骤如下:
+\begin{enumerate}
+	\item 设需要求极值的目标函数为$f(x_1,x_2,\cdots)$，限制条件为$g(x_1,x_2,\cdots)=0$;
+	\item 引入$n$个拉格朗日参数$\lambda_i,i=1,2,\cdots,n$;
+	\item 建立；拉格朗日函数
+		\begin{equation}
+			L(x_1,x_2,\cdots,x_n,\lambda_1,\lambda_2,\cdots,\lambda_n)=f(x_1,x_2,\cdots,x_n)+\sum_{i=1}^n\lambda_ig_i(x_1,x_2,\cdots,x_n)
+		\end{equation}
+	\item 对每一个参数求偏导，并令其为0，从而得到极值点:
+		\begin{equation}
+			\begin{split}
+				& \frac{\partial L}{\partial x_i}=0\\
+				& \frac{\partial L}{\partial \lambda_i}=0\\
+				& i\in \{1,2,\cdots,n\}
+			\end{split}
+		\end{equation}
+\end{enumerate}
+\section{最小二乘法}
+最小二乘估计法，又称最小平方法，是一种数学优化技术。它通过最小化误差的平方和寻找数据的最佳函数匹配。利用最小二乘估计法可以简便地求得未知的数据，并使得这些求得的数据与实际数据之间误差的平方和为最小。常用于线性回归模型。
+\par
+假设要回归的线性方程为$y=\beta_0+\beta_1x$，它的损失函数也是十分简单，就是假设$y_i$是真实值，$\hat{y}_i=\beta_0+\beta_1x$是估计值。那么损失函数可以写为：
+\begin{equation}
+	L=\sum_i^n(y_i-\hat{y}_i)^2=\sum_i^n(y_i-\beta_0-\beta_1x)^2
+\end{equation}
+要令$L$取最小值，分别对所有系数$\beta_0,\beta_1$进行求导:
+\begin{equation}
+	\begin{split}
+		& \frac{\partial L}{\partial \beta_0}=2\sum_i^n(y_i-\beta_0-\beta_1x_i)(-1)=0\\
+		& \frac{\partial L}{\partial \beta_1}=2\sum_i^n(y_i-\beta_0-\beta_1x_i)(-x_i)=0
+	\end{split}
+\end{equation}
+经过整理我们就可以求出$\beta_0,\beta_1$:
+\begin{equation}
+	\begin{split}
+		& \beta_0=\frac{\sum_i^nx_i^2\sum_i^ny_i-\sum_i^nx_i\sum_i^nx_iy_i}{n\sum_i^nx_i^2-(\sum_i^nx_i)^2}\\
+		& \beta_1=\frac{n\sum_i^nx_iy_i-\sum_i^nx_i\sum_i^ny_i}{n\sum_i^nx_i^2-(\sum_i^nx_i)^2}
+	\end{split}
+\end{equation}
+有了$\beta_0,\beta_1$两个参数，就可以回归线性方程了。
 \chapter{BP算法}
 假设样本输入为$x_i$，对应的标签为$y_i$。
 \par
